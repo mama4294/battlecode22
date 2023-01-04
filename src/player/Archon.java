@@ -106,6 +106,8 @@ public class Archon extends Robot{
 
 
     private MapLocation getAverageEnemyLocation() throws GameActionException {
+        if(enemyClusterLocations == null) return null;
+
         int sumX = 0;
         int sumY = 0;
         int sumWeight = 0;
