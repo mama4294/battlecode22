@@ -11,9 +11,33 @@ public class Miner extends Unit {
         super.takeTurn();
         runAwayFromEnemies();
         tryMine();
+        lookForGold();
         lookForLead();
         explore();
         spreadOut(RobotType.MINER);
+    }
+
+    public void lookForGold() throws GameActionException{
+        MapLocation[] goldLocations = rc.senseNearbyLocationsWithGold(rc.getType().visionRadiusSquared);
+        MapLocation locationInQuestion;
+        MapLocation bestgoldLocation = null;
+        double bestScore = Integer.MIN_VALUE;
+
+        for(int i = goldLocations.length - 1; i >= 0; i--) {
+            locationInQuestion = goldLocations[i];
+            int goldAmount = rc.senseGold(locationInQuestion);
+            if(goldAmount > 1){
+                double goldScore = getGoldLocationScore(locationInQuestion, goldAmount);
+                if(goldScore > bestScore){
+                    bestScore = goldScore;
+                    bestgoldLocation=locationInQuestion;
+                }
+            }
+        }
+
+        if(bestgoldLocation!=null){
+            goTo(bestgoldLocation);
+        }
     }
 
     public void lookForLead() throws GameActionException{
@@ -37,12 +61,6 @@ public class Miner extends Unit {
         if(bestLeadLocation!=null){
             goTo(bestLeadLocation);
         }
-
-//        if(leadLocations.length > 0){
-//            MapLocation target = nearestLocation(leadLocations);
-//            rc.setIndicatorLine(currentLocation, target, 255,255, 0);
-//            goTo(target);
-//        }
     }
 
     public double getLeadLocationScore(MapLocation LeadLocation, int leadAmount){
@@ -61,6 +79,24 @@ public class Miner extends Unit {
 
         if(radiusSquared == 0 && leadAmount > 1 ){return Integer.MAX_VALUE;}
         return (float)leadAmount - currentDistanceToLead * 5  - AmountMinedBeforeWeGetThere;
+    }
+
+    public double getGoldLocationScore(MapLocation goldLocation, int goldAmount){
+        int radiusSquared = currentLocation.distanceSquaredTo(goldLocation);
+        double currentDistanceTogold = Math.sqrt((double) radiusSquared);
+        double AmountMinedBeforeWeGetThere = 0;
+        for (RobotInfo nearbyAlly: nearbyAllies){
+            if(nearbyAlly.type == RobotType.MINER){
+                MapLocation alliedMinerLoc = nearbyAlly.getLocation();
+                double allyDistanceTogold = Math.sqrt((double)alliedMinerLoc.distanceSquaredTo(goldLocation));
+                if(allyDistanceTogold < currentDistanceTogold) {
+                    AmountMinedBeforeWeGetThere += (currentDistanceTogold - allyDistanceTogold) * 5;
+                }
+            }
+        }
+
+        if(radiusSquared == 0 && goldAmount > 1 ){return Integer.MAX_VALUE;}
+        return (float)goldAmount - currentDistanceTogold * 5  - AmountMinedBeforeWeGetThere;
     }
 
     public void runAwayFromEnemies() throws GameActionException{
