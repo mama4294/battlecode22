@@ -368,6 +368,29 @@ public class Comms extends Robot{
         return Archon.buildOption.values()[value]; // extract the last 2-bit value and find it in the array of buildOptions
     }
 
+    public static int encodeMessage (int value1, int value2, int bits) throws GameActionException{
+        int offset=bits;
+        int maxValue = (int)Math.pow(2,bits)-1;
+
+        if(value1 > maxValue || value2 > maxValue){
+            System.out.println("Invalid Inputs... Must be less than " + maxValue);
+            return 0;
+        }else {
+            //two bit encode
+            return (value1 << offset) | value2;
+        }
+    }
+
+    public static int[] decodeMessage (int message, int bits) throws GameActionException{
+        int offset=bits;
+        int maxValue = (int)Math.pow(2,bits)-1;
+
+        int value1 = maxValue & (message >> offset);
+        int value2 = maxValue & message;
+
+        return new int[]{value1, value2};
+    }
+
 
 
 
