@@ -56,7 +56,8 @@ public class Archon extends Robot{
         NONE,
         SOLDER,
         MINER,
-        BUILDER,
+
+        SAGE,
 
     }
 
@@ -188,10 +189,18 @@ public class Archon extends Robot{
 
     public void determineWhatToBuild() throws GameActionException{
             //Get from shared array
-        if(state == State.UnderAttack || state == State.ClosestToEnemy){
+        if(state == State.UnderAttack){
             toBuildThisRound = buildOption.SOLDER;
         }else{
             toBuildThisRound = Comms.getNextRoundToBuildValue(robotNumber);
+        }
+
+        if(rc.getTeamGoldAmount(rc.getTeam()) >= 50){
+            toBuildThisRound = toBuildThisRound;
+        }
+
+        if(checkIfClosestToEnemy() && toBuildThisRound == buildOption.MINER){
+            toBuildThisRound = buildOption.SOLDER;
         }
     }
 
@@ -209,6 +218,8 @@ public class Archon extends Robot{
         if(rc.isActionReady()){
             if((buildMiner && minerCount < MAX_NUM_MINERS) || rc.getRoundNum() < 10){
                 toBuildNextRound = buildOption.MINER;
+            }else if(rc.getTeamGoldAmount(rc.getTeam()) >= RobotType.SAGE.buildCostGold){
+                toBuildNextRound = buildOption.SAGE;
             }else{
                 toBuildNextRound = buildOption.SOLDER;
             }
@@ -298,6 +309,9 @@ public class Archon extends Robot{
                 break;
             case SOLDER:
                 toBuild = RobotType.SOLDIER;
+                break;
+            case SAGE:
+                toBuild = RobotType.SAGE;
                 break;
         }
 

@@ -25,6 +25,9 @@ public strictfp class RobotPlayer {
             case SOLDIER:
                 me = new Soldier(rc);
                 break;
+            case SAGE:
+                me = new Sage(rc);
+                break;
         }
 
         while (true) {

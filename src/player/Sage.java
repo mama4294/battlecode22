@@ -1,14 +1,14 @@
 package player;
-import java.util.Arrays;
-import battlecode.common.*;
 
-public class Soldier extends Unit {
+import battlecode.common.GameActionException;
+import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 
-    public Soldier(RobotController r) {
+public class Sage extends Unit {
+
+    public Sage(RobotController r) {
         super(r);
     }
-
-
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
@@ -17,25 +17,6 @@ public class Soldier extends Unit {
         goToClosestEnemyCluster();
         goToClosetEnemyArchon();
         explore();
-        spreadOut(RobotType.SOLDIER);
+        spreadOut(RobotType.SAGE);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
-
-
