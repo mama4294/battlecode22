@@ -130,6 +130,48 @@ public class Robot {
         return i;
     }
 
+    // Get an array of directions in order with the least amount of rubble.
+    public Direction[] getBuildDirections() throws GameActionException {
+        boolean[] usedDir = new boolean[directions.length];
+        Direction[] dirs = new Direction[directions.length];
+        int numDirections = 0;
+        int rubble;
+        int minRubble;
+        int numEqual;
+        int bestDir;
+        MapLocation loc;
+        for(int i = 0; i < directions.length; i++) {
+            minRubble = 101;
+            bestDir = -1;
+            numEqual = 0;
+            for(int j = 0; j < directions.length; j++) {
+                loc = rc.adjacentLocation(directions[j]);
+                if(usedDir[j] || !rc.onTheMap(loc)) continue;
+                rubble = rc.senseRubble(loc);
+                if(rubble < minRubble) {
+                    minRubble = rubble;
+                    bestDir = j;
+                } else if(rubble == minRubble) {
+                    numEqual++;
+
+                    if(rng.nextBoolean()) {// get a random boolean
+                        minRubble = rubble;
+                        bestDir = j;
+                    }
+                }
+            }
+
+            if(bestDir != -1) {
+                usedDir[bestDir] = true;
+                dirs[numDirections++] = directions[bestDir];
+            }
+        }
+
+        Direction[] buildDirctions = new Direction[numDirections];
+        System.arraycopy(dirs, 0, buildDirctions, 0, numDirections);
+        return buildDirctions;
+    }
+
 
     boolean tryMove(Direction dir) throws GameActionException {
         if (rc.canMove(dir)) {
@@ -172,6 +214,14 @@ public class Robot {
             if(bestDir != null) return goTo(bestDir);
             return goTo(rc.getLocation().directionTo(destination));
         }
+    }
+
+    public boolean buildRobot (RobotType type, Direction dir) throws GameActionException{
+        if (rc.canBuildRobot(type, dir)) {
+            rc.buildRobot(type, dir);
+            return true;
+        }
+        return false;
     }
 
 

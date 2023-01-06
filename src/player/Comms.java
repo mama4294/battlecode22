@@ -386,6 +386,32 @@ public class Comms extends Robot{
 
     }
 
+    public static MapLocation getAverageEnemyLocation() throws GameActionException {
+
+        getEnemyClusterLocations();
+        if(enemyClusterLocations == null || enemyClusterCounts==null) return null;
+
+        int sumX = 0;
+        int sumY = 0;
+        int sumWeight = 0;
+
+        for(int i=0; i<enemyClusterLocations.length; i++){
+            if(enemyClusterLocations[i] != null && enemyClusterCounts[i] >0){
+                int weight = enemyClusterCounts[i];
+                sumX = sumX + enemyClusterLocations[i].x * weight;
+                sumY = sumY + enemyClusterLocations[i].y * weight;
+                sumWeight = sumWeight + weight;
+            }
+        }
+
+        if(sumWeight == 0) return null;
+
+       MapLocation aveEnemyLoc =  new MapLocation(sumX/sumWeight, sumY/sumWeight);
+        rc.setIndicatorDot(aveEnemyLoc, 255, 0, 0);
+
+        return aveEnemyLoc;
+    }
+
 
 
     public static int encodeMessage (int value1, int value2, int bits) throws GameActionException{

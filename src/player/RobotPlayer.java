@@ -31,6 +31,9 @@ public strictfp class RobotPlayer {
             case BUILDER:
                 me = new Builder(rc);
                 break;
+            case LABORATORY:
+                me = new Lab(rc);
+                break;
         }
 
         while (true) {

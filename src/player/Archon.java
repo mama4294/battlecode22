@@ -108,25 +108,6 @@ public class Archon extends Robot{
 
 
 
-    private MapLocation getAverageEnemyLocation() throws GameActionException {
-        if(enemyClusterLocations == null) return null;
-
-        int sumX = 0;
-        int sumY = 0;
-        int sumWeight = 0;
-
-        for(int i=0; i<enemyClusterLocations.length; i++){
-            if(enemyClusterLocations[i] != null){
-                int weight = enemyClusterCounts[i];
-                sumX = sumX + enemyClusterLocations[i].x * weight;
-                sumY = sumY + enemyClusterLocations[i].y * weight;
-                sumWeight = sumWeight + weight;
-            }
-        }
-
-        return new MapLocation(sumX/sumWeight, sumY/sumWeight);
-    }
-
     private boolean checkUnderAttack() throws GameActionException {
         int numEnemyCombatants = 0;
         int numAllyCombatants = 0;
@@ -150,7 +131,7 @@ public class Archon extends Robot{
 
 
     private boolean checkIfClosestToEnemy() throws GameActionException {
-        MapLocation averageEnemyLoc = getAverageEnemyLocation();
+        MapLocation averageEnemyLoc = Comms.getAverageEnemyLocation();
         if(averageEnemyLoc == null) return false;
         rc.setIndicatorDot(averageEnemyLoc, 255, 0, 255);
         MapLocation[] allyArchonLocations = Comms.getAllyArchonLocations();
@@ -198,7 +179,7 @@ public class Archon extends Robot{
         }
 
         //if we are the closest to the enemy, build solders
-        if(checkIfClosestToEnemy() && toBuildThisRound == buildOption.MINER){
+        if(checkIfClosestToEnemy() && toBuildThisRound == buildOption.MINER  && labCount > 0){
             toBuildThisRound = buildOption.SOLDER;
         }
     }
@@ -227,8 +208,10 @@ public class Archon extends Robot{
         int randomNum = rng.nextInt(100);
 
         if(rc.isActionReady()){
-            if((randomNum < 25 && minerCount < MAX_NUM_MINERS) || rc.getRoundNum() < 10){
+            if((randomNum < 25 && minerCount < MAX_NUM_MINERS) || rc.getRoundNum() < 10) {
                 toBuildNextRound = buildOption.MINER;
+            } else if(labCount < 0){
+                toBuildNextRound = buildOption.NONE;
             }else if(rc.getTeamGoldAmount(rc.getTeam()) >= RobotType.SAGE.buildCostGold){
                 toBuildNextRound = buildOption.SAGE;
             }else if(builderCount < 1 && !checkIfClosestToEnemy() && state != State.UnderAttack && !otherArchonMakingABuilder){
@@ -350,57 +333,11 @@ public class Archon extends Robot{
 
     }
 
-    public boolean buildRobot (RobotType type, Direction dir) throws GameActionException{
-        if (rc.canBuildRobot(type, dir)) {
-            rc.buildRobot(type, dir);
-            return true;
-        }
-        return false;
-    }
 
 
 
-    // Get an array of directions in order with the least amount of rubble.
-    public Direction[] getBuildDirections() throws GameActionException {
-        boolean[] usedDir = new boolean[directions.length];
-        Direction[] dirs = new Direction[directions.length];
-        int numDirections = 0;
-        int rubble;
-        int minRubble;
-        int numEqual;
-        int bestDir;
-        MapLocation loc;
-        for(int i = 0; i < directions.length; i++) {
-            minRubble = 101;
-            bestDir = -1;
-            numEqual = 0;
-            for(int j = 0; j < directions.length; j++) {
-                loc = rc.adjacentLocation(directions[j]);
-                if(usedDir[j] || !rc.onTheMap(loc)) continue;
-                rubble = rc.senseRubble(loc);
-                if(rubble < minRubble) {
-                    minRubble = rubble;
-                    bestDir = j;
-                } else if(rubble == minRubble) {
-                    numEqual++;
 
-                    if(rng.nextBoolean()) {// get a random boolean
-                        minRubble = rubble;
-                        bestDir = j;
-                    }
-                }
-            }
 
-            if(bestDir != -1) {
-                usedDir[bestDir] = true;
-                dirs[numDirections++] = directions[bestDir];
-            }
-        }
-
-        Direction[] buildDirctions = new Direction[numDirections];
-        System.arraycopy(dirs, 0, buildDirctions, 0, numDirections);
-        return buildDirctions;
-    }
 
 
     public void tryHealRobot() throws GameActionException {
