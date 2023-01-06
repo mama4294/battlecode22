@@ -213,10 +213,12 @@ public class Archon extends Robot{
     public void determineWhatToBuildNextRound() throws GameActionException{
         //Write to shared array what will be built next round
         buildOption toBuildNextRound = buildOption.NONE;
-        boolean buildMiner = rng.nextBoolean();
+
+        //random number between 0 and 100
+        int randomNum = rng.nextInt(100);
 
         if(rc.isActionReady()){
-            if((buildMiner && minerCount < MAX_NUM_MINERS) || rc.getRoundNum() < 10){
+            if((randomNum < 25 && minerCount < MAX_NUM_MINERS) || rc.getRoundNum() < 10){
                 toBuildNextRound = buildOption.MINER;
             }else if(rc.getTeamGoldAmount(rc.getTeam()) >= RobotType.SAGE.buildCostGold){
                 toBuildNextRound = buildOption.SAGE;

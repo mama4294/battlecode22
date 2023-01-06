@@ -14,7 +14,7 @@ public class Robot {
 
     int robotNumber;
     String actionPerformed = "No action";
-    Random rng = new Random(6147);
+    Random rng;
 
     RobotInfo[] nearbyEnemies;
     RobotInfo[] nearbyAllies;
@@ -41,6 +41,7 @@ public class Robot {
 
     public Robot(RobotController r) {
         this.rc = r;
+        rng = new Random(rc.getRoundNum()*23981 + rc.getID()*10289);
         Nav.init(rc);
         Comms.init(rc);
         Debug.init(rc);
