@@ -17,11 +17,11 @@ public class Debug extends Robot {
     }
 
     static final boolean showMovementLines = false; //Yellow
-    static final boolean showEnemyClusterDots = true; //purple
+    static final boolean showEnemyClusterDots = false; //purple
 
-    static final boolean showRetreatLines = true; //pink
+    static final boolean showRetreatLines = false; //pink
 
-    static final boolean showMining = true; //black
+    static final boolean showMining = false; //black
 
 
     public static void drawMovementTargetLine (MapLocation target) throws GameActionException{
