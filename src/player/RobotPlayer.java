@@ -28,6 +28,9 @@ public strictfp class RobotPlayer {
             case SAGE:
                 me = new Sage(rc);
                 break;
+            case BUILDER:
+                me = new Builder(rc);
+                break;
         }
 
         while (true) {

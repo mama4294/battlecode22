@@ -348,25 +348,45 @@ public class Comms extends Robot{
 
 
     public static void setNextRoundToBuildValue (Archon.buildOption toBuild, int archonNumber) throws GameActionException{
-        //reads the current message of (4) 2-bit values encoded in an integer
+        //reads the current message of (4) 3-bit values encoded in an integer
         //Clears the archon number's bits to 0 0
         //Combines a new "buildInt" integer with the cleared messaged with an or operator
 
         int buildInt = toBuild.ordinal(); //gets the integer of the enum
         int currentMessage = rc.readSharedArray(IDX_ARCHON_BUILD_VALUES);
-        int offset =  2*(archonNumber - 1);
-        int clearedFlag = (~(3 << offset)) & currentMessage; //clears the 2-bit message at the offset location
+        int offset =  3*(archonNumber - 1);
+        int clearedFlag = (~(7 << offset)) & currentMessage; //clears the 3-bit message at the offset location
 
         rc.writeSharedArray(IDX_ARCHON_BUILD_VALUES, clearedFlag | (buildInt << offset));
     }
 
     public static Archon.buildOption getNextRoundToBuildValue(int archonNum) throws GameActionException {
-        //reads the current message of (4) 2-bit values encoded in an integer and returns the robot type associated with the archon number
+        //reads the current message of (4) 3-bit values encoded in an integer and returns the robot type associated with the archon number
         int message = rc.readSharedArray(IDX_ARCHON_BUILD_VALUES);
-        int offset =  2*(archonNum - 1);
-        int value = 3 & (message >> offset);
-        return Archon.buildOption.values()[value]; // extract the last 2-bit value and find it in the array of buildOptions
+        int offset =  3*(archonNum - 1);
+        int value = 7 & (message >> offset);
+        return Archon.buildOption.values()[value]; // extract the last 3-bit value and find it in the array of buildOptions
     }
+
+    public static Archon.buildOption[] getOtherArchonsToBuilds(int archonNum) throws GameActionException {
+        //reads the current message of (4) 3-bit values encoded in an integer and returns the robot type associated with the archon number
+        int message = rc.readSharedArray(IDX_ARCHON_BUILD_VALUES);
+
+        int a1 = archonNum != 1 ? 7 & (message >> 0) : 0;
+        int a2 = archonNum != 2 ? 7 & (message >> 3) : 0;
+        int a3 = archonNum != 3 ? 7 & (message >> 6) : 0;
+        int a4 = archonNum != 4 ? 7 & (message >> 9) : 0;
+
+        Archon.buildOption b1 = Archon.buildOption.values()[a1];
+        Archon.buildOption b2 = Archon.buildOption.values()[a2];
+        Archon.buildOption b3 = Archon.buildOption.values()[a3];
+        Archon.buildOption b4 = Archon.buildOption.values()[a4];
+
+        return new Archon.buildOption[]{b1, b2, b3, b4};
+
+    }
+
+
 
     public static int encodeMessage (int value1, int value2, int bits) throws GameActionException{
         int offset=bits;

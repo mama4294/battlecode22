@@ -57,6 +57,8 @@ public class Archon extends Robot{
         SOLDER,
         MINER,
 
+        BUILDER,
+
         SAGE,
 
     }
@@ -195,10 +197,7 @@ public class Archon extends Robot{
             toBuildThisRound = Comms.getNextRoundToBuildValue(robotNumber);
         }
 
-        if(rc.getTeamGoldAmount(rc.getTeam()) >= 50){
-            toBuildThisRound = toBuildThisRound;
-        }
-
+        //if we are the closest to the enemy, build solders
         if(checkIfClosestToEnemy() && toBuildThisRound == buildOption.MINER){
             toBuildThisRound = buildOption.SOLDER;
         }
@@ -214,6 +213,16 @@ public class Archon extends Robot{
         //Write to shared array what will be built next round
         buildOption toBuildNextRound = buildOption.NONE;
 
+        buildOption[] otherArchonPlans = Comms.getOtherArchonsToBuilds(robotNumber);
+
+        //determine if other archonplans contains BUILDER
+        boolean otherArchonMakingABuilder = false;
+        for(int i=0; i<otherArchonPlans.length; i++){
+            if(otherArchonPlans[i] == buildOption.BUILDER){
+                otherArchonMakingABuilder = true;
+            }
+        }
+
         //random number between 0 and 100
         int randomNum = rng.nextInt(100);
 
@@ -222,6 +231,8 @@ public class Archon extends Robot{
                 toBuildNextRound = buildOption.MINER;
             }else if(rc.getTeamGoldAmount(rc.getTeam()) >= RobotType.SAGE.buildCostGold){
                 toBuildNextRound = buildOption.SAGE;
+            }else if(builderCount < 1 && !checkIfClosestToEnemy() && state != State.UnderAttack && !otherArchonMakingABuilder){
+                toBuildNextRound = buildOption.BUILDER;
             }else{
                 toBuildNextRound = buildOption.SOLDER;
             }
@@ -314,6 +325,9 @@ public class Archon extends Robot{
                 break;
             case SAGE:
                 toBuild = RobotType.SAGE;
+                break;
+            case BUILDER:
+                toBuild = RobotType.BUILDER;
                 break;
         }
 
