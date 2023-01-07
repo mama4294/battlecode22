@@ -170,24 +170,7 @@ public class Archon extends Robot{
         if (debug) rc.setIndicatorDot(guessLoc, 255, 255, 255);
     }
 
-    public void determineWhatToBuild() throws GameActionException{
-            //Get from shared array
-        if(state == State.UnderAttack){
-            toBuildThisRound = buildOption.SOLDER;
-        }else{
-            toBuildThisRound = Comms.getNextRoundToBuildValue(robotNumber);
-        }
 
-        //if we are the closest to the enemy, build solders
-        if(checkIfClosestToEnemy() && toBuildThisRound == buildOption.MINER  && labCount > 0){
-            toBuildThisRound = buildOption.SOLDER;
-        }
-    }
-
-    public void getTurnsSinceLastBuild() throws GameActionException{
-        //Get from shared array
-        toBuildThisRound = Comms.getNextRoundToBuildValue(robotNumber);
-    }
 
 
     public void determineWhatToBuildNextRound() throws GameActionException{
@@ -210,18 +193,84 @@ public class Archon extends Robot{
         if(rc.isActionReady()){
             if((randomNum < 25 && minerCount < MAX_NUM_MINERS) || rc.getRoundNum() < 10) {
                 toBuildNextRound = buildOption.MINER;
-            } else if(labCount < 0){
+            } else if(builderCount < 1 &&  labCount < 1 && !checkIfClosestToEnemy() && state != State.UnderAttack && !otherArchonMakingABuilder){
+                toBuildNextRound = buildOption.BUILDER;
+            }else if(labCount < 1 && state != State.UnderAttack){
                 toBuildNextRound = buildOption.NONE;
             }else if(rc.getTeamGoldAmount(rc.getTeam()) >= RobotType.SAGE.buildCostGold){
                 toBuildNextRound = buildOption.SAGE;
-            }else if(builderCount < 1 && !checkIfClosestToEnemy() && state != State.UnderAttack && !otherArchonMakingABuilder){
-                toBuildNextRound = buildOption.BUILDER;
             }else{
                 toBuildNextRound = buildOption.SOLDER;
             }
         }
 
         Comms.setNextRoundToBuildValue(toBuildNextRound, robotNumber);
+    }
+
+    public void determineWhatToBuild() throws GameActionException{
+        //Get from shared array
+        if(state == State.UnderAttack){
+            toBuildThisRound = buildOption.SOLDER;
+        }else{
+            toBuildThisRound = Comms.getNextRoundToBuildValue(robotNumber);
+        }
+
+        //if we are the closest to the enemy, build solders
+        if(checkIfClosestToEnemy() && toBuildThisRound == buildOption.MINER  && labCount > 0){
+            toBuildThisRound = buildOption.SOLDER;
+        }
+    }
+
+    public void getTurnsSinceLastBuild() throws GameActionException{
+        //Get from shared array
+        toBuildThisRound = Comms.getNextRoundToBuildValue(robotNumber);
+    }
+
+    public void tryBuildUnit() throws GameActionException{
+        boolean buildSuccessful = false;
+
+
+        if(!rc.isActionReady() || toBuildThisRound == buildOption.NONE || (turnsSinceLastBuild < maxTurnsSinceLastBuild & state != State.UnderAttack)){
+            Comms.incrementTurnsSinceBuild(robotNumber);
+            return; //skip if not ready
+        }
+
+        Direction[] optimalDirectionArray = getBuildDirections(); //get optimal build direction array
+        RobotType toBuild = null;
+
+        //Set what to build
+        switch (toBuildThisRound){
+            case MINER:
+                toBuild = RobotType.MINER;
+                break;
+            case SOLDER:
+                toBuild = RobotType.SOLDIER;
+                break;
+            case SAGE:
+                toBuild = RobotType.SAGE;
+                break;
+            case BUILDER:
+                toBuild = RobotType.BUILDER;
+                break;
+        }
+
+        //Build it by trying the optimal build directions
+        if(toBuild != null  && rc.getTeamLeadAmount(rc.getTeam()) > toBuild.buildCostLead){
+            for(int i=0; i< optimalDirectionArray.length; i++){
+                if(buildRobot(toBuild, optimalDirectionArray[i])){
+                    buildSuccessful=true;
+                    break;
+                }
+            }
+        }
+
+        if(buildSuccessful){
+            Comms.resetTurnsSinceBuild(robotNumber);
+        }else{
+            Comms.incrementTurnsSinceBuild(robotNumber);
+        }
+
+
     }
 
 
@@ -286,52 +335,7 @@ public class Archon extends Robot{
         );
     }
 
-    public void tryBuildUnit() throws GameActionException{
-        boolean buildSuccessful = false;
 
-
-        if(!rc.isActionReady() || toBuildThisRound == buildOption.NONE || (turnsSinceLastBuild < maxTurnsSinceLastBuild & state != State.UnderAttack)){
-            Comms.incrementTurnsSinceBuild(robotNumber);
-            return; //skip if not ready
-        }
-
-        Direction[] optimalDirectionArray = getBuildDirections(); //get optimal build direction array
-        RobotType toBuild = null;
-
-        //Set what to build
-        switch (toBuildThisRound){
-            case MINER:
-                toBuild = RobotType.MINER;
-                break;
-            case SOLDER:
-                toBuild = RobotType.SOLDIER;
-                break;
-            case SAGE:
-                toBuild = RobotType.SAGE;
-                break;
-            case BUILDER:
-                toBuild = RobotType.BUILDER;
-                break;
-        }
-
-        //Build it by trying the optimal build directions
-        if(toBuild != null  && rc.getTeamLeadAmount(rc.getTeam()) > toBuild.buildCostLead){
-            for(int i=0; i< optimalDirectionArray.length; i++){
-                if(buildRobot(toBuild, optimalDirectionArray[i])){
-                    buildSuccessful=true;
-                    break;
-                }
-            }
-        }
-
-        if(buildSuccessful){
-            Comms.resetTurnsSinceBuild(robotNumber);
-        }else{
-            Comms.incrementTurnsSinceBuild(robotNumber);
-        }
-
-
-    }
 
 
 
@@ -357,15 +361,7 @@ public class Archon extends Robot{
         }
     }
 
-    public int getMaxHealth(RobotType robotType) {
-        switch(robotType) {
-            case SAGE: return RobotType.SAGE.health;
-            case MINER: return RobotType.MINER.health;
-            case SOLDIER: return RobotType.SOLDIER.health;
-            case BUILDER: return RobotType.BUILDER.health;
-            default: return 0;
-        }
-    }
+
 
     public void tryMoveToBetterLoc() throws GameActionException{
         //Move if current location has rubble more than max rubble constant

@@ -224,6 +224,19 @@ public class Robot {
         return false;
     }
 
+    public int getMaxHealth(RobotType robotType) {
+        switch(robotType) {
+            case SAGE: return RobotType.SAGE.health;
+            case MINER: return RobotType.MINER.health;
+            case SOLDIER: return RobotType.SOLDIER.health;
+            case BUILDER: return RobotType.BUILDER.health;
+            case ARCHON: return RobotType.ARCHON.health;
+            case LABORATORY: return RobotType.LABORATORY.health;
+            case WATCHTOWER: return RobotType.WATCHTOWER.health;
+            default: return 0;
+        }
+    }
+
 
 
     public void spreadOut(RobotType type) throws GameActionException {
